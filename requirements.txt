@@ -1,0 +1,5 @@
+# Pinned so the branch/tag DDL and the fast_forward procedure these tests assert
+# against cannot change under us on a fresh install. 
+pyspark==3.5.1
+pytest==8.2.0
+python-docx==1.1.2 
