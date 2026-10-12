@@ -13,7 +13,8 @@ Two ways to get that wrong, and this file asserts both:
 
   * `max` across upstreams instead of `min` -- the laggard is ignored
   * `max` *within* one upstream -- a hole in its history is ignored, which is
-    the subtler of the two and the one the first version of this suite missed
+    the subtler of the two and the one a suite written against the obvious bug
+    would miss
 
 How this fails if the design is wrong
 -------------------------------------
@@ -90,9 +91,7 @@ def platform_tables(spark, namespaces, monkeypatch):
     # Iceberg cannot create a branch on a table with no commits -- and so the
     # "main is untouched" assertions run against a non-empty baseline rather
     # than against zero, where any bug that writes nothing would also pass.
-    spark.sql(
-        f"INSERT INTO {MART} VALUES (DATE '{D - timedelta(days=10)}', 'L-OLD', 10000, 10000)"
-    )
+    spark.sql(f"INSERT INTO {MART} VALUES (DATE '{D - timedelta(days=10)}', 'L-OLD', 10000, 10000)")
 
 
 def mark_complete(spark, source: str, dates) -> None:
@@ -102,9 +101,21 @@ def mark_complete(spark, source: str, dates) -> None:
     the set has a hole in it.
     """
     for d in dates:
+        # Every column is listed, including the ones an arrival signal has no
+        # opinion about. The ledger carries two kinds of row by design -- an
+        # upstream declaring a business date complete, and a file claim from the
+        # restatement path -- so file_hash, uri and worker_id are genuinely null
+        # here. They are spelled out because Spark's v2 write path requires a
+        # value for every output column and Iceberg declares no defaults: a
+        # partial column list fails with CANNOT_FIND_DATA rather than filling
+        # the gaps. Casts are explicit so the nulls carry the column's type.
         spark.sql(
             f"INSERT INTO {CATALOG}.platform.ingest_ledger "
-            f"(source, business_date, status) VALUES ('{source}', DATE '{d}', 'COMPLETE')"
+            f"(source, business_date, file_hash, knowledge_version, uri, "
+            f"row_count, worker_id, status, claimed_at) VALUES ("
+            f"'{source}', DATE '{d}', CAST(NULL AS STRING), CAST(NULL AS INT), "
+            f"CAST(NULL AS STRING), CAST(NULL AS BIGINT), CAST(NULL AS STRING), "
+            f"'COMPLETE', CAST(NULL AS TIMESTAMP))"
         )
 
 
@@ -144,9 +155,7 @@ def latest_decision(spark, business_date: date = D) -> str:
 
 def branch_exists(spark, business_date: date = D) -> bool:
     branch = CONTRACT.candidate_branch(business_date)
-    return spark.sql(
-        f"SELECT count(*) FROM {MART}.refs WHERE name = '{branch}'"
-    ).first()[0] > 0
+    return spark.sql(f"SELECT count(*) FROM {MART}.refs WHERE name = '{branch}'").first()[0] > 0
 
 
 def test_stalled_upstream_is_held(spark):
@@ -208,9 +217,9 @@ def test_p0_failure_holds_and_main_is_untouched(spark):
 
     assert row["status"] == Decision.HELD.value
     assert row["reason"] == "P0 check failure"
-    assert row["findings"] == '{"principal_is_non_negative": 1}', (
-        "findings must be JSON -- str(dict) emits single quotes and corrupts the literal"
-    )
+    assert (
+        row["findings"] == '{"principal_is_non_negative": 1}'
+    ), "findings must be JSON -- str(dict) emits single quotes and corrupts the literal"
     assert spark.table(MART).count() == before, "held partition leaked onto main"
     assert row["valid_through"] is None
 
@@ -225,9 +234,9 @@ def test_publishes_once_the_laggard_catches_up(spark):
 
     assert row["status"] == Decision.PUBLISHED.value
     assert row["valid_through"] == D
-    assert spark.sql(
-        f"SELECT count(*) FROM {MART} WHERE business_date = DATE '{D}'"
-    ).first()[0] == 1
+    assert (
+        spark.sql(f"SELECT count(*) FROM {MART} WHERE business_date = DATE '{D}'").first()[0] == 1
+    )
     assert dataset_valid_through(spark, CONTRACT) == D
     assert not branch_exists(spark), "published candidate branch was not cleaned up"
 
@@ -244,16 +253,19 @@ def test_override_publishes_incomplete_data_but_says_so(spark):
 
     stage_candidate(spark, [(D, "L-1", 500_00, 0)])
     row = publish_partition(
-        spark, CONTRACT, D,
-        override=Override(approver="cfo@example.com", ticket="FIN-9912",
-                          reason="statutory filing deadline"),
+        spark,
+        CONTRACT,
+        D,
+        override=Override(
+            approver="cfo@example.com", ticket="FIN-9912", reason="statutory filing deadline"
+        ),
     )
 
     assert row["status"] == Decision.OVERRIDDEN.value
     assert "FIN-9912" in row["reason"]
-    assert spark.sql(
-        f"SELECT count(*) FROM {MART} WHERE business_date = DATE '{D}'"
-    ).first()[0] == 1
+    assert (
+        spark.sql(f"SELECT count(*) FROM {MART} WHERE business_date = DATE '{D}'").first()[0] == 1
+    )
 
 
 def test_override_cannot_waive_a_p0(spark):
@@ -264,7 +276,9 @@ def test_override_cannot_waive_a_p0(spark):
     before = spark.table(MART).count()
     stage_candidate(spark, [(D, "L-1", -1, 0)])
     row = publish_partition(
-        spark, CONTRACT, D,
+        spark,
+        CONTRACT,
+        D,
         override=Override(approver="cfo@example.com", ticket="FIN-9912", reason="deadline"),
     )
 
@@ -291,4 +305,3 @@ def test_valid_through_drops_back_when_a_published_date_is_later_held(spark):
 
     assert latest_decision(spark) == "HELD"
     assert dataset_valid_through(spark, CONTRACT) is None
-

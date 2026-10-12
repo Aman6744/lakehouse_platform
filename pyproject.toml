@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dataplatform"
+version = "0.1.0"
+description = "Lakehouse platform for lending, insurance and recharge — reference implementation of three correctness guarantees"
+requires-python = ">=3.10"
+dependencies = [
+    "pyspark==3.5.1",
+]
+
+[project.optional-dependencies]
+docs = ["python-docx==1.1.2"]
+dev = [
+    "pytest==8.2.0",
+    "ruff==0.5.5",
+    "python-docx==1.1.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+# `pythonpath` means `pytest` works straight from a clone, with no
+# `pip install -e .` step: `src` puts `dataplatform` on the path, `tests` makes
+# `from conftest import ...` resolve. Reviewers should not have to install a
+# package to read a test run.
+pythonpath = ["src", "tests"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra --strict-markers --strict-config"
+
+# PySpark and py4j emit deprecation noise on import and ResourceWarnings on
+# session teardown. Filtered narrowly, by module, so a warning raised by the
+# code under test still surfaces.
+filterwarnings = [
+    "ignore::DeprecationWarning:pyspark.*",
+    "ignore::DeprecationWarning:py4j.*",
+    "ignore::ResourceWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests", "tools"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # import sorting
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "SIM",  # simplify
+]
+ignore = [
+    # The modules build Spark SQL by string composition because Spark SQL has no
+    # bind parameters for DDL or MERGE. `sqlutil.sql_str`/`sql_ident` are the
+    # sanctioned way to interpolate, and are used throughout; a blanket ban on
+    # f-strings in SQL would flag every one of those call sites.
+    "S608",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests deliberately assert on long literal SQL and long explanatory strings.
+"tests/*" = ["E501"]
+"tools/build_docs.py" = ["E501"]

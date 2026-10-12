@@ -55,4 +55,3 @@ def catalog_of(table: str) -> str:
 def relative_to_catalog(table: str) -> str:
     """`catalog.ns.tbl` -> `ns.tbl`, the form Iceberg CALL procedures expect."""
     return sql_ident(table).split(".", 1)[1]
-

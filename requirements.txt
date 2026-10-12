@@ -1,5 +1,18 @@
-# Pinned so the branch/tag DDL and the fast_forward procedure these tests assert
-# against cannot change under us on a fresh install. 
+# Convenience list for `pip install -r requirements.txt`. The authoritative
+# declaration is `pyproject.toml`; `pip install -e ".[dev]"` installs the same
+# set and also puts `dataplatform` on the path.
+#
+# Pinned rather than floating: branch and tag DDL, and the fast_forward
+# procedure, are version-sensitive and a silent upgrade would change what the
+# tests are actually asserting about.
+
 pyspark==3.5.1
 pytest==8.2.0
-python-docx==1.1.2 
+ruff==0.5.5
+python-docx==1.1.2
+
+# The Iceberg runtime is a JVM dependency, not a Python one. It is resolved at
+# session start by `spark.jars.packages` in tests/conftest.py:
+#   org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.2
+# A first run therefore needs network access to Maven Central, or a
+# pre-populated ~/.ivy2 cache.

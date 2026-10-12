@@ -1,9 +1,24 @@
 __pycache__/
 *.pyc
-.pytest_cache
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
 .DS_Store
 .venv/
 venv/
+
+# Spark / Iceberg local test artifacts
 spark-warehouse/
 metastore_db/
 derby.log
+.ivy2/
+
+# Credential-shaped files must never be committed; CI also rejects these by
+# extension, but keeping them out of the working tree is cheaper than scrubbing
+# them out of history.
+*.jks
+*.pfx
+*.p12
+*.keytab
+*.pem
+*.key

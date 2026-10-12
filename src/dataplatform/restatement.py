@@ -213,9 +213,7 @@ def write_partition(
     previous_branch = spark.conf.get("spark.wap.branch", None)
     spark.conf.set("spark.wap.branch", sql_ident(branch))
     try:
-        corrected.writeTo(table).overwrite(
-            F.col("business_date") == F.lit(d.business_date)
-        )
+        corrected.writeTo(table).overwrite(F.col("business_date") == F.lit(d.business_date))
     finally:
         if previous_branch is None:
             spark.conf.unset("spark.wap.branch")
@@ -223,9 +221,7 @@ def write_partition(
             spark.conf.set("spark.wap.branch", previous_branch)
 
 
-def ingest_delivery(
-    spark: SparkSession, d: Delivery, table: str, branch: str
-) -> Disposition:
+def ingest_delivery(spark: SparkSession, d: Delivery, table: str, branch: str) -> Disposition:
     """The whole path for one file drop. Idempotent by construction.
 
     Returns the disposition actually acted on. A DUPLICATE, or a claim another
@@ -263,7 +259,8 @@ def publish_restatement(
         return row
 
     tag_close(
-        spark, contract.dataset,
+        spark,
+        contract.dataset,
         f"restatement_{d.business_date:%Y%m%d}_v{version}",
     )
     invalidate_downstream(spark, contract.dataset, d.business_date, version)

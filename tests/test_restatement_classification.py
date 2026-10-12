@@ -1,13 +1,13 @@
 """Hard problem 3's tests: prove that a redelivered file is never appended, and
 that a correction is never silently absorbed as one.
 
-Previously this problem had no test file at all, on the argument that the two
-others were harder. That was the wrong thing to skip. `classify` is the cheapest
-possible thing to test -- a pure ledger read, no branches, no Spark streaming --
-and it is the single decision that stands between a re-sent settlement file and
-a doubled day of revenue. The genuinely hard property here (that a reader never
-observes the partition empty or doubled mid-overwrite) is still not tested, and
-is still named in the honesty section.
+It would be easy to argue this problem does not need its own file, on the
+grounds that the other two are harder. That argument is wrong. `classify` is the
+cheapest possible thing to test -- a pure ledger read, no branches, no Spark
+streaming -- and it is the single decision that stands between a re-sent
+settlement file and a doubled day of revenue. The genuinely hard property here
+(that a reader never observes the partition empty or doubled mid-overwrite) is
+not tested, and is named as untested in the honesty section.
 
 How this fails if the design is wrong
 -------------------------------------
@@ -15,9 +15,9 @@ How this fails if the design is wrong
   `test_renamed_but_identical_file_is_a_duplicate` fails, and in production the
   day is counted twice.
 * Filter the ledger lookup to `status = 'COMPLETE'` ->
-  `test_redelivery_while_first_load_is_in_flight_is_a_duplicate` fails. This is
-  the bug the earlier version of `classify` actually had: a redelivery arriving
-  while the first load was still CLAIMED looked brand new.
+  `test_redelivery_while_first_load_is_in_flight_is_a_duplicate` fails. `COMPLETE`
+  is the intuitive filter to write here, and it is wrong: a redelivery arriving
+  while the first load is still CLAIMED looks brand new.
 * Treat a new hash for a known date as an append instead of a restatement ->
   `test_new_content_for_a_known_date_is_a_restatement` fails.
 * Trust "my MERGE did not raise" as proof of ownership ->
@@ -80,9 +80,7 @@ def test_first_sight_of_a_business_date_is_new(spark):
 def test_renamed_but_identical_file_is_a_duplicate(spark):
     """Partners rename and re-zip constantly. Only the bytes are evidence."""
     claim(spark, FIRST, TABLE, worker_id="w1")
-    same_bytes_new_name = redelivery(
-        uri="s3://drops/acme/resent/SETTLEMENT_FINAL_v2.csv.gz"
-    )
+    same_bytes_new_name = redelivery(uri="s3://drops/acme/resent/SETTLEMENT_FINAL_v2.csv.gz")
     assert classify(spark, same_bytes_new_name, TABLE) is Disposition.DUPLICATE
 
 
@@ -94,9 +92,10 @@ def test_redelivery_while_first_load_is_in_flight_is_a_duplicate(spark):
     partition.
     """
     claim(spark, FIRST, TABLE, worker_id="w1")
-    assert spark.sql(
-        f"SELECT status FROM {CATALOG}.platform.ingest_ledger"
-    ).first()["status"] == "CLAIMED"
+    assert (
+        spark.sql(f"SELECT status FROM {CATALOG}.platform.ingest_ledger").first()["status"]
+        == "CLAIMED"
+    )
     assert classify(spark, FIRST, TABLE) is Disposition.DUPLICATE
 
 
@@ -131,10 +130,13 @@ def test_second_worker_does_not_own_the_claim(spark):
     assert first.owned_by_us is True
     assert second.owned_by_us is False
     assert second.knowledge_version == first.knowledge_version
-    assert spark.sql(
-        f"SELECT count(*) FROM {CATALOG}.platform.ingest_ledger "
-        f"WHERE source = '{FIRST.source}' AND business_date = DATE '{D}'"
-    ).first()[0] == 1, "the same delivery was claimed twice"
+    assert (
+        spark.sql(
+            f"SELECT count(*) FROM {CATALOG}.platform.ingest_ledger "
+            f"WHERE source = '{FIRST.source}' AND business_date = DATE '{D}'"
+        ).first()[0]
+        == 1
+    ), "the same delivery was claimed twice"
 
 
 def test_tag_survives_ordinary_snapshot_expiry(spark):
@@ -145,9 +147,7 @@ def test_tag_survives_ordinary_snapshot_expiry(spark):
     expiry below would drop the snapshot the tag points at and the final read
     would fail rather than returning what we believed in March.
     """
-    spark.sql(
-        f"INSERT INTO {TABLE} VALUES (DATE '{D}', 'T-1', 500, 1, '{HASH_A}')"
-    )
+    spark.sql(f"INSERT INTO {TABLE} VALUES (DATE '{D}', 'T-1', 500, 1, '{HASH_A}')")
     tag_close(spark, TABLE, "close_2026_03_31")
 
     spark.sql(f"INSERT INTO {TABLE} VALUES (DATE '{D}', 'T-2', 700, 1, '{HASH_A}')")
@@ -162,4 +162,3 @@ def test_tag_survives_ordinary_snapshot_expiry(spark):
     ).first()[0]
     assert as_of_close == 1, "the tagged snapshot was expired away"
     assert spark.table(TABLE).count() == 2, "current state should still hold both rows"
-

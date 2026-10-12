@@ -228,7 +228,9 @@ def publish_partition(
 
     if incomplete and override is None:
         return _hold(
-            spark, contract, business_date,
+            spark,
+            contract,
+            business_date,
             reason=f"incomplete upstreams; effective watermark = {watermark}",
             findings=[],
         )
@@ -241,8 +243,11 @@ def publish_partition(
         # Deliberately checked after the override branch: an override waives
         # incompleteness, never a P0 violation.
         return _hold(
-            spark, contract, business_date,
-            reason="P0 check failure", findings=blocking,
+            spark,
+            contract,
+            business_date,
+            reason="P0 check failure",
+            findings=blocking,
         )
 
     branch = contract.candidate_branch(business_date)
@@ -262,14 +267,20 @@ def publish_partition(
         # The candidate branch is deliberately left in place so the divergence
         # can be inspected before the next run overwrites it.
         return _record_and_return(
-            spark, contract, business_date, Decision.FAILED, None, [],
+            spark,
+            contract,
+            business_date,
+            Decision.FAILED,
+            None,
+            [],
             reason=f"fast_forward failed: {type(exc).__name__}: {exc}",
         )
 
     decision = Decision.OVERRIDDEN if incomplete else Decision.PUBLISHED
     reason = (
         f"override by {override.approver} ({override.ticket}): {override.reason}"
-        if override else ""
+        if override
+        else ""
     )
     row = _record_and_return(
         spark, contract, business_date, decision, watermark, warnings, reason=reason

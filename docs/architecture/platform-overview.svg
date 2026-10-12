@@ -1,0 +1,317 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1680 920" width="1680" height="920" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6b7d"/>
+    </marker>
+    <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b4531f"/>
+    </marker>
+    <style>
+      .zone      { fill:#f4f6f8; stroke:#c7d0d9; stroke-width:1.5; rx:10; }
+      .zoneTitle { font-size:13px; font-weight:bold; fill:#1f3864; letter-spacing:.4px; }
+      .box       { fill:#ffffff; stroke:#8fa3b8; stroke-width:1.2; rx:6; }
+      .boxCdc    { fill:#fff8f2; stroke:#d98b50; stroke-width:1.6; rx:6; }
+      .boxGate   { fill:#f2f7ff; stroke:#5588cc; stroke-width:1.6; rx:6; }
+      .boxKnow   { fill:#f5f2fb; stroke:#8b74c4; stroke-width:1.6; rx:6; }
+      .lbl       { font-size:11.5px; fill:#202a35; }
+      .sub       { font-size:10px; fill:#5a6b7d; }
+      .hp        { font-size:9.5px; font-weight:bold; fill:#b4531f; letter-spacing:.3px; }
+      .flow      { stroke:#5a6b7d; stroke-width:1.6; fill:none; marker-end:url(#arrow); }
+      .flowBack  { stroke:#b4531f; stroke-width:1.6; fill:none; stroke-dasharray:5 3; marker-end:url(#arrowAccent); }
+      .note      { font-size:10px; fill:#b4531f; font-style:italic; }
+      .svcTitle  { font-size:12px; font-weight:bold; fill:#1f3864; }
+    </style>
+  </defs>
+
+  <text x="28" y="34" font-size="19" font-weight="bold" fill="#1f3864">Lakehouse platform &#8212; lending, insurance, recharge</text>
+  <text x="28" y="54" class="sub">Six zones left to right over a platform-services band. Every guarantee is a property of one zone boundary, not of the system as a whole.</text>
+
+  <!-- ================= ZONES ================= -->
+  <rect class="zone" x="24"   y="74" width="236" height="590"/>
+  <text class="zoneTitle" x="42" y="96">1 &#183; SOURCES</text>
+
+  <rect class="zone" x="282"  y="74" width="248" height="590"/>
+  <text class="zoneTitle" x="300" y="96">2 &#183; INGESTION &amp; TRANSPORT</text>
+
+  <rect class="zone" x="552"  y="74" width="200" height="590"/>
+  <text class="zoneTitle" x="570" y="96">3 &#183; BRONZE</text>
+
+  <rect class="zone" x="774"  y="74" width="224" height="590"/>
+  <text class="zoneTitle" x="792" y="96">4 &#183; SILVER</text>
+
+  <rect class="zone" x="1020" y="74" width="256" height="590"/>
+  <text class="zoneTitle" x="1038" y="96">5 &#183; PUBLISH GATE</text>
+
+  <rect class="zone" x="1298" y="74" width="358" height="590"/>
+  <text class="zoneTitle" x="1316" y="96">6 &#183; GOLD &amp; SERVING</text>
+
+  <!-- ================= SOURCES ================= -->
+  <rect class="box" x="42" y="112" width="200" height="46"/>
+  <text class="lbl" x="54" y="131">OLTP &#8212; Lending Core</text>
+  <text class="sub" x="54" y="147">PostgreSQL &#183; settles 23:00 IST</text>
+
+  <rect class="box" x="42" y="168" width="200" height="46"/>
+  <text class="lbl" x="54" y="187">OLTP &#8212; Insurance Core</text>
+  <text class="sub" x="54" y="203">PostgreSQL &#183; long restatement tail</text>
+
+  <rect class="box" x="42" y="224" width="200" height="46"/>
+  <text class="lbl" x="54" y="243">OLTP &#8212; Recharge Core</text>
+  <text class="sub" x="54" y="259">MySQL &#183; high volume, low value</text>
+
+  <rect class="box" x="42" y="286" width="200" height="46"/>
+  <text class="lbl" x="54" y="305">Event streams</text>
+  <text class="sub" x="54" y="321">~10k events/sec peak &#8776; 5 MB/s</text>
+
+  <rect class="box" x="42" y="342" width="200" height="46"/>
+  <text class="lbl" x="54" y="361">Partner / vendor files</text>
+  <text class="sub" x="54" y="377">~500M rows/day &#183; mutable history</text>
+
+  <rect class="box" x="42" y="398" width="200" height="46"/>
+  <text class="lbl" x="54" y="417">Third-party APIs</text>
+  <text class="sub" x="54" y="433">KYC, bureau, pricing &#183; cursor</text>
+
+  <rect class="box" x="42" y="454" width="200" height="46"/>
+  <text class="lbl" x="54" y="473">Ops spreadsheets</text>
+  <text class="sub" x="54" y="489">no schema contract</text>
+
+  <text class="note" x="42" y="534">Five source families,</text>
+  <text class="note" x="42" y="550">five different guarantees &#8212;</text>
+  <text class="note" x="42" y="566">so five ingestion mechanisms,</text>
+  <text class="note" x="42" y="582">not one universal loader.</text>
+
+  <!-- ================= INGESTION ================= -->
+  <rect class="box" x="300" y="112" width="212" height="58"/>
+  <text class="lbl" x="312" y="131">Debezium CDC connectors</text>
+  <text class="sub" x="312" y="147">Kafka key = primary key, so</text>
+  <text class="sub" x="312" y="161">per-key order survives partitioning</text>
+
+  <rect class="box" x="300" y="286" width="212" height="46"/>
+  <text class="lbl" x="312" y="305">Kafka + Schema Registry</text>
+  <text class="sub" x="312" y="321">incompatible payload &#8594; topic parks</text>
+
+  <rect class="box" x="300" y="342" width="212" height="58"/>
+  <text class="lbl" x="312" y="361">Arrival ledger &#8212; atomic claim</text>
+  <text class="sub" x="312" y="377">on (source, business_date,</text>
+  <text class="sub" x="312" y="391">file_hash) before a row is read</text>
+
+  <rect class="box" x="300" y="412" width="212" height="46"/>
+  <text class="lbl" x="312" y="431">API poller</text>
+  <text class="sub" x="312" y="447">persisted cursor, bounded backoff</text>
+
+  <rect class="box" x="300" y="468" width="212" height="46"/>
+  <text class="lbl" x="312" y="487">Governed CSV path</text>
+  <text class="sub" x="312" y="503">git + PR + CI schema validation</text>
+
+  <rect class="box" x="300" y="528" width="212" height="40"/>
+  <text class="lbl" x="312" y="547">Per-source quarantine</text>
+  <text class="sub" x="312" y="562">reject reason retained</text>
+
+  <!-- ================= BRONZE ================= -->
+  <rect class="box" x="570" y="112" width="164" height="38"/>
+  <text class="lbl" x="582" y="136">bronze.cdc_*</text>
+  <rect class="box" x="570" y="158" width="164" height="38"/>
+  <text class="lbl" x="582" y="182">bronze.events_*</text>
+  <rect class="box" x="570" y="204" width="164" height="38"/>
+  <text class="lbl" x="582" y="228">bronze.files_*</text>
+  <rect class="box" x="570" y="250" width="164" height="38"/>
+  <text class="lbl" x="582" y="274">bronze.api_*</text>
+  <rect class="box" x="570" y="296" width="164" height="38"/>
+  <text class="lbl" x="582" y="320">bronze.ref_*</text>
+
+  <text class="note" x="570" y="364">Immutable, source-shaped,</text>
+  <text class="note" x="570" y="380">append-only.</text>
+  <text class="note" x="570" y="402">The replay source of truth:</text>
+  <text class="note" x="570" y="418">wrong silver logic is a</text>
+  <text class="note" x="570" y="434">recompute, not an apology.</text>
+
+  <!-- ================= SILVER ================= -->
+  <rect class="boxCdc" x="792" y="112" width="188" height="62"/>
+  <text class="hp" x="804" y="130">HARD PROBLEM 1</text>
+  <text class="lbl" x="804" y="147">Idempotent CDC apply</text>
+  <text class="sub" x="804" y="163">s._lsn &gt; t._lsn &#183; soft deletes</text>
+
+  <rect class="box" x="792" y="186" width="188" height="40"/>
+  <text class="lbl" x="804" y="205">SCD2 dimensions</text>
+  <text class="sub" x="804" y="220">valid_time history</text>
+
+  <rect class="box" x="792" y="238" width="188" height="52"/>
+  <text class="lbl" x="804" y="257">Conformed facts</text>
+  <text class="sub" x="804" y="273">business_date from the feed's</text>
+  <text class="sub" x="804" y="286">own settlement cutover</text>
+
+  <rect class="box" x="792" y="302" width="188" height="40"/>
+  <text class="lbl" x="804" y="321">Identity resolution</text>
+  <text class="sub" x="804" y="336">one customer, three businesses</text>
+
+  <rect class="box" x="792" y="354" width="188" height="40"/>
+  <text class="lbl" x="804" y="373">Money: BIGINT paise</text>
+  <text class="sub" x="804" y="388">never float, anywhere</text>
+
+  <rect class="box" x="792" y="406" width="188" height="52"/>
+  <text class="lbl" x="804" y="425">Merge-on-read + compaction</text>
+  <text class="sub" x="804" y="441">copy-on-write would rewrite</text>
+  <text class="sub" x="804" y="454">the table every minute</text>
+
+  <!-- ================= PUBLISH GATE ================= -->
+  <rect class="boxGate" x="1038" y="112" width="220" height="44"/>
+  <text class="lbl" x="1050" y="131">Write to candidate branch</text>
+  <text class="sub" x="1050" y="147">publish_candidate_YYYYMMDD</text>
+
+  <rect class="boxGate" x="1038" y="166" width="220" height="62"/>
+  <text class="hp" x="1050" y="184">HARD PROBLEM 2</text>
+  <text class="lbl" x="1050" y="201">Watermark = min(upstreams)</text>
+  <text class="sub" x="1050" y="217">newest date with no holes behind it</text>
+
+  <rect class="boxGate" x="1038" y="238" width="220" height="52"/>
+  <text class="lbl" x="1050" y="257">P0 / P1 checks on the branch</text>
+  <text class="sub" x="1050" y="273">exact bytes, real skew &#8212;</text>
+  <text class="sub" x="1050" y="286">not a sample, not a dry run</text>
+
+  <rect class="boxGate" x="1038" y="302" width="220" height="62"/>
+  <text class="lbl" x="1050" y="321">fast_forward &#8594; main</text>
+  <text class="sub" x="1050" y="337">or DROP BRANCH + HELD + page.</text>
+  <text class="sub" x="1050" y="350">One atomic catalog operation.</text>
+
+  <rect class="boxGate" x="1038" y="376" width="220" height="44"/>
+  <text class="lbl" x="1050" y="395">dataset_manifest</text>
+  <text class="sub" x="1050" y="411">every decision, incl. refusals</text>
+
+  <rect class="boxGate" x="1038" y="430" width="220" height="44"/>
+  <text class="lbl" x="1050" y="449">Override: approver + ticket</text>
+  <text class="sub" x="1050" y="465">waives completeness, never a P0</text>
+
+  <text class="note" x="1038" y="506">Consumers see</text>
+  <text class="note" x="1038" y="522">stale-but-correct,</text>
+  <text class="note" x="1038" y="538">never fresh-but-wrong.</text>
+
+  <!-- ================= GOLD & SERVING ================= -->
+  <rect class="box" x="1316" y="112" width="160" height="40"/>
+  <text class="lbl" x="1328" y="131">Gold marts</text>
+  <text class="sub" x="1328" y="146">business-shaped</text>
+
+  <rect class="boxKnow" x="1490" y="112" width="150" height="62"/>
+  <text class="hp" x="1502" y="130">HARD PROBLEM 3</text>
+  <text class="lbl" x="1502" y="147">Tags, retained 5y</text>
+  <text class="sub" x="1502" y="163">close_YYYY_MM_DD</text>
+
+  <rect class="boxKnow" x="1316" y="166" width="160" height="62"/>
+  <text class="lbl" x="1328" y="185">Restatement &#8594;</text>
+  <text class="sub" x="1328" y="201">knowledge_version bump</text>
+  <text class="sub" x="1328" y="214">+ downstream invalidation</text>
+
+  <rect class="box" x="1316" y="252" width="324" height="44"/>
+  <text class="lbl" x="1328" y="271">Trino views filtered on valid_through</text>
+  <text class="sub" x="1328" y="287">a dashboard physically cannot render a refused partition</text>
+
+  <rect class="box" x="1316" y="312" width="156" height="52"/>
+  <text class="lbl" x="1328" y="331">Analysts &amp; finance</text>
+  <text class="sub" x="1328" y="347">ad-hoc SQL, large scans</text>
+
+  <rect class="box" x="1484" y="312" width="156" height="52"/>
+  <text class="lbl" x="1496" y="331">Applications</text>
+  <text class="sub" x="1496" y="347">KV store, sub-ms lookups</text>
+
+  <rect class="box" x="1316" y="376" width="156" height="52"/>
+  <text class="lbl" x="1328" y="395">Data scientists</text>
+  <text class="sub" x="1328" y="411">as-of tag &#8594; no leakage</text>
+
+  <rect class="box" x="1484" y="376" width="156" height="52"/>
+  <text class="lbl" x="1496" y="395">Auditors</text>
+  <text class="sub" x="1496" y="411">time travel + lineage</text>
+
+  <text class="note" x="1316" y="462">The KV store is a cache with a</text>
+  <text class="note" x="1316" y="478">documented lag and a rebuild path &#8212;</text>
+  <text class="note" x="1316" y="494">never the system of record.</text>
+
+  <!-- ================= FLOWS ================= -->
+  <path class="flow" d="M 242 135 L 298 135"/>
+  <path class="flow" d="M 242 191 L 274 191 L 274 141 L 298 141"/>
+  <path class="flow" d="M 242 247 L 274 247 L 274 147 L 298 147"/>
+  <path class="flow" d="M 242 309 L 298 309"/>
+  <path class="flow" d="M 242 365 L 298 365"/>
+  <path class="flow" d="M 242 421 L 298 421"/>
+  <path class="flow" d="M 242 477 L 298 477"/>
+
+  <path class="flow" d="M 512 141 L 540 141 L 540 131 L 568 131"/>
+  <path class="flow" d="M 512 309 L 540 309 L 540 177 L 568 177"/>
+  <path class="flow" d="M 512 371 L 540 371 L 540 223 L 568 223"/>
+  <path class="flow" d="M 512 435 L 540 435 L 540 269 L 568 269"/>
+  <path class="flow" d="M 512 491 L 540 491 L 540 315 L 568 315"/>
+
+  <path class="flow" d="M 734 131 L 762 131 L 762 143 L 790 143"/>
+  <path class="flow" d="M 734 223 L 762 223 L 762 264 L 790 264"/>
+
+  <path class="flow" d="M 980 143 L 1008 143 L 1008 134 L 1036 134"/>
+  <path class="flow" d="M 980 264 L 1008 264 L 1008 134 L 1036 134"/>
+
+  <path class="flow" d="M 1258 324 L 1284 324 L 1284 132 L 1314 132"/>
+  <path class="flow" d="M 1476 132 L 1488 132"/>
+  <path class="flow" d="M 1396 152 L 1396 164"/>
+  <path class="flow" d="M 1478 252 L 1478 240 L 1396 240 L 1396 228"/>
+  <path class="flow" d="M 1396 296 L 1396 310"/>
+  <path class="flow" d="M 1562 296 L 1562 310"/>
+  <path class="flow" d="M 1370 364 L 1370 374"/>
+  <path class="flow" d="M 1562 364 L 1562 374"/>
+
+  <!-- restatement re-enters the gate -->
+  <path class="flowBack" d="M 1396 228 L 1396 236 L 1286 236 L 1286 452 L 1260 452"/>
+  <text class="note" x="1150" y="470">a correction re-enters the gate &#8212;</text>
+  <text class="note" x="1150" y="484">it is not automatically an improvement</text>
+
+  <!-- quarantine back-edge -->
+  <path class="flowBack" d="M 406 400 L 406 526"/>
+  <text class="note" x="300" y="590">contract violation &#8594;</text>
+  <text class="note" x="300" y="604">quarantine, rate is a P0 check</text>
+
+  <!-- ================= PLATFORM SERVICES ================= -->
+  <rect class="zone" x="24" y="684" width="1632" height="212"/>
+  <text class="svcTitle" x="42" y="708">PLATFORM SERVICES &#8212; every zone above depends on these</text>
+
+  <rect class="box" x="42" y="722" width="246" height="56"/>
+  <text class="lbl" x="54" y="741">Iceberg REST catalog</text>
+  <text class="sub" x="54" y="757">Polaris / Nessie &#183; atomic commits</text>
+  <text class="sub" x="54" y="770">expected to break first</text>
+
+  <rect class="box" x="300" y="722" width="246" height="56"/>
+  <text class="lbl" x="312" y="741">S3 + Parquet (zstd-3)</text>
+  <text class="sub" x="312" y="757">512MB targets, sorted</text>
+  <text class="sub" x="312" y="770">(customer_id, event_time)</text>
+
+  <rect class="box" x="558" y="722" width="246" height="56"/>
+  <text class="lbl" x="570" y="741">Dagster &#8212; partition assets</text>
+  <text class="sub" x="570" y="757">triggered by inputs reporting</text>
+  <text class="sub" x="570" y="770">complete, not by a clock</text>
+
+  <rect class="box" x="816" y="722" width="246" height="56"/>
+  <text class="lbl" x="828" y="741">Table maintenance</text>
+  <text class="sub" x="828" y="757">compaction, snapshot expiry,</text>
+  <text class="sub" x="828" y="770">orphan cleanup &#183; load-bearing</text>
+
+  <rect class="box" x="1074" y="722" width="270" height="56"/>
+  <text class="lbl" x="1086" y="741">Prometheus + Grafana</text>
+  <text class="sub" x="1086" y="757">freshness &#183; completeness &#183;</text>
+  <text class="sub" x="1086" y="770">recon delta &#183; cost per dataset</text>
+
+  <rect class="box" x="1356" y="722" width="282" height="56"/>
+  <text class="lbl" x="1368" y="741">Ranger &#183; OIDC &#183; Kerberos &#183; mTLS</text>
+  <text class="sub" x="1368" y="757">SSE-KMS per zone; PII under</text>
+  <text class="sub" x="1368" y="770">per-subject keys</text>
+
+  <rect class="box" x="42" y="796" width="504" height="84"/>
+  <text class="lbl" x="54" y="815">Platform tables</text>
+  <text class="sub" x="54" y="833">ingest_ledger &#8212; the completeness signal, and the file claim</text>
+  <text class="sub" x="54" y="848">dataset_manifest &#8212; every gate decision, including refusals</text>
+  <text class="sub" x="54" y="863">cdc_applied_batches &#183; invalidations</text>
+
+  <rect class="box" x="558" y="796" width="504" height="84"/>
+  <text class="lbl" x="570" y="815">Physical layout</text>
+  <text class="sub" x="570" y="833">facts: days(business_date) + bucket(64, customer_id)</text>
+  <text class="sub" x="570" y="848">silver CDC: bucketed on PK, deliberately not date-partitioned</text>
+  <text class="sub" x="570" y="863">~1,825 partitions per table over five years</text>
+
+  <rect class="box" x="1074" y="796" width="564" height="84"/>
+  <text class="lbl" x="1086" y="815">Data protection</text>
+  <text class="sub" x="1086" y="833">subject columns encrypted under per-subject KMS keys</text>
+  <text class="sub" x="1086" y="848">DPDP erasure = destroy the key, not the rows</text>
+  <text class="sub" x="1086" y="863">tags pin files for 5y, so rows cannot simply be deleted &#8212; unresolved tension</text>
+</svg>

@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref rather than paying for both.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install lint tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff==0.5.5
+
+      - name: Compile every module
+        # Catches syntax errors without needing Spark or a JVM, which is the
+        # cheapest possible gate and the one that fails fastest.
+        run: python -m compileall -q src tests
+
+      - name: Ruff (lint)
+        run: ruff check --output-format=github src tests
+
+      - name: Ruff (format check)
+        run: ruff format --check --diff src tests
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        # PySpark 3.5 runs on JDK 17; without this the runner's default JDK
+        # version decides whether the suite starts at all.
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Cache the Iceberg runtime jar
+        # conftest.py resolves iceberg-spark-runtime through spark.jars.packages
+        # on first session start. Uncached, every run re-downloads it from Maven
+        # Central and the suite spends longer fetching than asserting.
+        uses: actions/cache@v4
+        with:
+          path: ~/.ivy2
+          key: ivy2-iceberg-1.5.2-spark-3.5
+
+      - name: pytest
+        run: pytest -v
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks needs history to scan commits, not just the working tree.
+          fetch-depth: 0
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Reject credential file types
+        # Belt and braces, and independent of gitleaks' rule set: this repo
+        # should never contain a keystore or a private key, whatever its
+        # contents look like to an entropy check.
+        run: |
+          matches=$(git ls-files | grep -iE '\.(jks|pfx|p12|keytab|pem|key|crt|cer|der)$' || true)
+          if [ -n "$matches" ]; then
+            echo "Credential-shaped files are tracked:"; echo "$matches"; exit 1
+          fi
+          echo "no credential-shaped files tracked"
